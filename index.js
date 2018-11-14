@@ -1,8 +1,9 @@
 const activities = require('./data.json')
 const MIN_BUDGET = 100, MAX_BUDGET = 5000
-const BUDGET = 1500, MIN_DAY_BUDGET = 50
+const BUDGET = 5000, MIN_DAY_BUDGET = 50
 const MIN_DAY_ACTIVITIES = 3, COMMUTE_TIME = 30
 const DAY_DURATION = 720, DAY_PROBABILITY = 0.3
+const BACKTRACK_LENGTH = 100
 
 const fitness = solution => {
     if (!solution || (solution.length != activities.length)) return Number.MAX_VALUE
@@ -30,8 +31,8 @@ const fitness = solution => {
             }).reduce((a, b) => a + b, 0)
 
             const tripBudget = Object.values(budget).reduce((a, b) => a + b, 0)
-            if (tripBudget < BUDGET) result += (BUDGET - tripBudget) / 5
-            else if (tripBudget > BUDGET) result += (tripBudget - BUDGET) * 2
+            if (tripBudget < BUDGET) result += (BUDGET - tripBudget) / 2
+            else if (tripBudget > BUDGET) result += (tripBudget - BUDGET) * 2.5
             return result
         }
     }
@@ -136,18 +137,23 @@ const print = solution => {
         }
     }
     const prices = Object.values(result).map(arr => arr.reduce((price, obj) => obj.price + price, 0))
+    console.log('budget:', BUDGET)
     console.log(
-        'price:', 
+        'spendings (per day):', 
         prices,
         ', balance:',
         BUDGET - prices.reduce((a, b) => a + b, 0)
     )
-    console.log('duration:', Object.values(result).map(arr => arr.reduce((duration, obj) => obj.duration + duration + COMMUTE_TIME, 0)))
+    console.log(
+        'durations (per day):', 
+        Object.values(result).map(arr => arr.reduce((duration, obj) => obj.duration + duration + COMMUTE_TIME, 0))
+    )
+
     return result
 }
 
 const optimize = () => {
-    let sol = up('0'.repeat(1000))
+    let sol = up('0'.repeat(activities.length))
     let fsol = fitness(sol)
     let bSol = sol, bfSol = fsol
     let lahc = Array(2).fill(fsol)
@@ -156,7 +162,7 @@ const optimize = () => {
         let newSol = neighbor(sol)
         let newFSol = fitness(newSol)
         // console.log(newFSol, lahc[lahcI % lahc.length])
-        if (newFSol < lahc[lahcI % lahc.length] + 100) { // allow backtracking
+        if (newFSol < lahc[lahcI % lahc.length] + BACKTRACK_LENGTH) { // allow backtracking
             if (newFSol < lahc[lahcI % lahc.length]) {
                 bSol = newSol + ''
                 bfSol = newFSol
@@ -166,7 +172,8 @@ const optimize = () => {
             lahc[lahcI % lahc.length] = newFSol
             lahcI++
         }
-        console.log(fsol, lahc.join(', '))
+        if (bfSol == 0) break;
+        // console.log(fsol, lahc.join(', '))
         i++
     }
     console.log(print(bSol))
