@@ -36,89 +36,87 @@ Your program needs to output JSON in the following format:
     "summary": {
       "budget": 600,
       "days": 2,
-      "budget_spent_per_days": [ 312, 266 ],
-      "duration_per_day": [ 630, 660 ],
-      "total_activities": 9
+      "balance": 0,
+      "budget_spent_per_days": [
+        137,
+        463
+      ],
+      "duration_per_day": [
+        450,
+        630
+      ],
+      "total_activities": 7
     },
     "days": [
-      {
-        "day": 1,
-        "itinerary": [
-          {
-            "start": "10:00",
-            "activity": {
-              "id": 148,
-              "duration": 60,
-              "price": 17
-            }
-          },
-          {
-            "start": "11:30",
-            "activity": {
-              "id": 24,
-              "duration": 210,
-              "price": 21
-            }
-          },
-          {
-            "start": "15:30",
-            "activity": {
-              "id": 108,
-              "duration": 240,
-              "price": 106
-            }
-          },
-          {
-            "start": "20:00",
-            "activity": {
-              "id": 19,
-              "duration": 30,
-              "price": 168
-            }
-          }
-        ]
-      },
       {
         "day": 2,
         "itinerary": [
           {
             "start": "10:00",
+            "startMinutes": 600,
             "activity": {
-              "id": 87,
-              "duration": 30,
-              "price": 59
-            }
-          },
-          {
-            "start": "11:00",
-            "activity": {
-              "id": 56,
-              "duration": 150,
-              "price": 33
-            }
-          },
-          {
-            "start": "14:00",
-            "activity": {
-              "id": 18,
-              "duration": 180,
-              "price": 31
-            }
-          },
-          {
-            "start": "17:30",
-            "activity": {
-              "id": 47,
+              "id": 52,
               "duration": 120,
-              "price": 94
+              "price": 100
             }
           },
           {
-            "start": "20:00",
+            "start": "12:30",
+            "startMinutes": 750,
             "activity": {
-              "id": 66,
+              "id": 116,
+              "duration": 210,
+              "price": 324
+            }
+          },
+          {
+            "start": "16:30",
+            "startMinutes": 990,
+            "activity": {
+              "id": 695,
               "duration": 90,
-              "price": 49
+              "price": 27
+            }
+          },
+          {
+            "start": "18:30",
+            "startMinutes": 1110,
+            "activity": {
+              "id": 843,
+              "duration": 90,
+              "price": 12
+            }
+          }
+        ]
+      },
+      {
+        "day": 1,
+        "itinerary": [
+          {
+            "start": "10:00",
+            "startMinutes": 600,
+            "activity": {
+              "id": 291,
+              "duration": 60,
+              "price": 23
+            }
+          },
+          {
+            "start": "11:30",
+            "startMinutes": 690,
+            "activity": {
+              "id": 488,
+              "duration": 90,
+              "price": 98
+            }
+          },
+          {
+            "start": "13:30",
+            "startMinutes": 810,
+            "activity": {
+              "id": 690,
+              "duration": 210,
+              "price": 16
             }
           }
         ]
