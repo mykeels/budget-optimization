@@ -1,5 +1,9 @@
 /**
  * CHANGE THE "BUDGET" and "DAYS" constants values and run
+ * 
+ * Works well, a lot of the time. 😄 Evolutionary Algorithms are rad like that 😂
+ * 
+ * Sometimes, you'll get a negative balance, and will need to re-run
  */
 
 const activities = require('./data.json')
@@ -8,7 +12,7 @@ const MIN_DAY_ACTIVITIES = 3, COMMUTE_TIME = 30
 const DAY_DURATION = 720, DAY_PROBABILITY = 0.3
 const BACKTRACK_LENGTH = 100
 const MAX_ITERATIONS = 10000
-const BUDGET = 200, DAYS = 3
+const BUDGET = 300, DAYS = 4
 
 const fitness = solution => {
     if (!solution || (solution.length != activities.length)) return Number.MAX_VALUE
@@ -90,7 +94,6 @@ const replace = solution => {
     }
     if (indices.length) {
         const index = indices[Math.floor(Math.random() * indices.length)]
-        //flip a coin to decide whether to remove an entire day
         if (days.length) {
             const selectedDay = days[Math.floor(Math.random() * days.length)]
             solution[index] = selectedDay
@@ -106,7 +109,7 @@ const neighbor = solution => {
     else return down(solution)
 }
 
-const print = solution => {
+const format = solution => {
     const result = {
         schedule: {
             summary: {},
@@ -173,6 +176,9 @@ const formatTime = minutes => {
     return `${Math.floor(minutes / 60)}:${minutes % 60 || '00'}`
 }
 
+/**
+ * Uses Late-Acceptance Hill-Climbing Algorithm with Backtracking
+ */
 const optimize = () => {
     let sol = initialSolution()
     let fsol = fitness(sol)
@@ -197,11 +203,13 @@ const optimize = () => {
         // console.log(fsol, lahc.join(', '))
         i++
     }
+    const result = format(bSol)
     console.log(
         JSON.stringify(
-            print(bSol), null, 2
+            result, null, 2
         )
     )
+    if (result.schedule.summary.balance < 0) process.exit(1)
 }
 
 optimize()
