@@ -1,20 +1,14 @@
 /**
- * THIS IS AN INCORRECT PROGRAM, 
- * BECAUSE IT MAKES THE BUDGETED DAYS VARIABLE, 
- * RATHER THAN FIXED, 
- * SO IT HAS TO BE REVISED!
- * 
- * IT'S WORTH LOOKING AT THOUGH, 
- * COS IT'S A GOOD EXAMPLE OF LATE-ACCEPTANCE HILL CLIMBING,
- * WITH A SPRINKLE OF BACKTRACKING.
+ * CHANGE THE "BUDGET" and "DAYS" constants values and run
  */
 
 const activities = require('./data.json')
-const MIN_BUDGET = 100, MAX_BUDGET = 5000
-const BUDGET = 5000, MIN_DAY_BUDGET = 50
+const MIN_BUDGET = 100, MAX_BUDGET = 5000, MIN_DAY_BUDGET = 50
 const MIN_DAY_ACTIVITIES = 3, COMMUTE_TIME = 30
 const DAY_DURATION = 720, DAY_PROBABILITY = 0.3
 const BACKTRACK_LENGTH = 100
+const MAX_ITERATIONS = 10000
+const BUDGET = 200, DAYS = 3
 
 const fitness = solution => {
     if (!solution || (solution.length != activities.length)) return Number.MAX_VALUE
@@ -61,22 +55,8 @@ const up = solution => {
     }
     if (indices.length) {
         const index = indices[Math.floor(Math.random() * indices.length)]
-        //flip a coin to decide whether to begin a new day
-        if (maxDay && Math.random() < DAY_PROBABILITY) {
-            maxDay = Math.max(maxDay, 1)
-            solution[index] = Math.ceil(Math.random() * maxDay)
-        }
-        else {
-            // begin a new day
-            const selectedIndices = {}
-            for (let i = 1; i <= MIN_DAY_ACTIVITIES; i++) {
-                const index = indices[Math.floor(Math.random() * indices.length)]
-                if (!selectedIndices.hasOwnProperty(index)) {
-                    solution[index] = maxDay + 1
-                    selectedIndices[index] = index
-                }
-            }
-        }
+        maxDay = Math.max(maxDay, 1)
+        solution[index] = Math.ceil(Math.random() * maxDay)
     }
     return solution.join('')
 }
@@ -93,19 +73,7 @@ const down = solution => {
     }
     if (indices.length) {
         const index = indices[Math.floor(Math.random() * indices.length)]
-        //flip a coin to decide whether to remove an entire day
-        if (!days.length || Math.random() < DAY_PROBABILITY) {
-            solution[index] = 0
-        }
-        else {
-            // remove an entire day
-            const selectedDay = days[Math.floor(Math.random() * days.length)]
-            for (let i = 0; i < solution.length; i++) {
-                if (Number(solution[i]) == selectedDay) {
-                    solution[i] = 0
-                }
-            }
-        }
+        solution[index] = 0
     }
     return solution.join('')
 }
@@ -139,37 +107,79 @@ const neighbor = solution => {
 }
 
 const print = solution => {
-    const result = {}
+    const result = {
+        schedule: {
+            summary: {},
+            days: []
+        }
+    }
+    
+    let activityCount = 0
+    const selectedActivities = {}
+    const times = {}
     for (let i = 0; i < solution.length; i++) {
         const day = Number(solution[i])
         if (day) {
-            result[day] = result[day] || []
-            result[day].push(activities[i])
+            const activity = activities[i]
+            let dayObj = result.schedule.days.find(d => d.day === day)
+            if (!dayObj) {
+                dayObj = {
+                    day,
+                    itinerary: []
+                }
+                result.schedule.days.push(dayObj)
+                times[day] = 600
+            }
+            dayObj.itinerary.push({
+                start: formatTime(times[day]),
+                startMinutes: times[day],
+                activity
+            })
+            times[day] += activity.duration + 30
+            selectedActivities[day] = selectedActivities[day] || []
+            selectedActivities[day].push(activity)
+            activityCount++;
         }
     }
-    const prices = Object.values(result).map(arr => arr.reduce((price, obj) => obj.price + price, 0))
-    console.log('budget:', BUDGET)
-    console.log(
-        'spendings (per day):', 
-        prices,
-        ', balance:',
-        BUDGET - prices.reduce((a, b) => a + b, 0)
-    )
-    console.log(
-        'durations (per day):', 
-        Object.values(result).map(arr => arr.reduce((duration, obj) => obj.duration + duration + COMMUTE_TIME, 0))
-    )
+
+    const spendings = Object.values(selectedActivities).map(arr => arr.reduce((price, obj) => obj.price + price, 0))
+    const durations = Object.values(selectedActivities).map(arr => arr.reduce((duration, obj) => obj.duration + duration + COMMUTE_TIME, 0))
+    result.schedule.summary.budget = BUDGET
+    result.schedule.summary.days = DAYS
+    result.schedule.summary.balance = BUDGET - spendings.reduce((a, b) => a + b, 0)
+    result.schedule.summary.budget_spent_per_days = spendings
+    result.schedule.summary.duration_per_day = durations
+    result.schedule.summary.total_activities = activityCount
 
     return result
 }
 
+const initialSolution = () => {
+    let sol = Array(activities.length).fill(0)
+    for (let i = 1; i <= DAYS; i++) {
+        const selectedIndices = {}
+        while (Object.keys(selectedIndices).length < MIN_DAY_ACTIVITIES) {
+            const index = Math.floor(Math.random() * sol.length)
+            if (!selectedIndices.hasOwnProperty(index) && !sol[index]) {
+                sol[index] = i
+                selectedIndices[index] = index
+            }
+        }
+    }
+    return sol.join('')
+}
+
+const formatTime = minutes => {
+    return `${Math.floor(minutes / 60)}:${minutes % 60 || '00'}`
+}
+
 const optimize = () => {
-    let sol = up('0'.repeat(activities.length))
+    let sol = initialSolution()
     let fsol = fitness(sol)
     let bSol = sol, bfSol = fsol
     let lahc = Array(2).fill(fsol)
     let i = 0, lahcI = 0
-    while (fsol > 0 && i < 10000) {
+    while (fsol > 0 && i < MAX_ITERATIONS) {
         let newSol = neighbor(sol)
         let newFSol = fitness(newSol)
         // console.log(newFSol, lahc[lahcI % lahc.length])
@@ -187,8 +197,11 @@ const optimize = () => {
         // console.log(fsol, lahc.join(', '))
         i++
     }
-    console.log(print(bSol))
-    console.log(bSol)
+    console.log(
+        JSON.stringify(
+            print(bSol), null, 2
+        )
+    )
 }
 
 optimize()
